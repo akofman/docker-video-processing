@@ -2,8 +2,6 @@ FROM python:3.6.1-alpine
 MAINTAINER Alexis Kofman <alexis.kofman@gmail.com>
 
 ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig" \
-    CC="/usr/bin/clang" \
-    CXX="/usr/bin/clang++" \
     SRC="/usr/local" \
     OPENCV_VERSION="3.2.0" \
     FFMPEG_VERSION="3.3.2" \
@@ -28,21 +26,20 @@ ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig" \
     FREETYPE_SHA256SUM="5d03dd76c2171a7601e9ce10551d52d4471cf92cd205948e60289251daddffa8  freetype-2.5.5.tar.gz" \
     LIBVIDSTAB_SHA256SUM="14d2a053e56edad4f397be0cb3ef8eb1ec3150404ce99a426c4eb641861dc0bb  v1.1.0.tar.gz"
 
+## INSTALL FFMPEG https://ffmpeg.org
+
 RUN apk update && apk upgrade && \
     buildDeps="autoconf \
                automake \
                bash \
                binutils \
                bzip2 \
-               clang \
-               clang-dev \
                cmake \
                curl \
                coreutils \
                g++ \
                gcc \
                libtool \
-               linux-headers \
                make \
                openssl-dev \
                tar \
@@ -182,7 +179,7 @@ RUN apk update && apk upgrade && \
     make install && \
     rm -rf ${DIR} && \
 #RUN  \
-## ffmpeg https://ffmpeg.org
+## ffmpeg
     DIR=$(mktemp -d) && cd ${DIR} && \
     curl -sLO https://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.gz && \
     tar -zx --strip-components=1 -f ffmpeg-${FFMPEG_VERSION}.tar.gz && \
@@ -225,18 +222,26 @@ RUN apk update && apk upgrade && \
     make qt-faststart && \
     cp qt-faststart ${SRC}/bin && \
     rm -rf ${DIR} && \
-#RUN  \
-# OpenCV depends on Numpy. It represents images as NumPy arrays, so we need to install NumPy :
+
+## INSTALL OPENCV http://opencv.org
+
+#RUN \
+    opencvDeps="clang \
+                clang-dev \
+                linux-headers" && \
+    apk  add --update ${opencvDeps} && \
+    export CC="/usr/bin/clang" && \
+    export CXX="/usr/bin/clang++" && \
+    # OpenCV depends on NumPy. It represents images as NumPy arrays, so we need to install NumPy
     pip3 install numpy && \
-    ldconfig && \
-#RUN  \
-# opencv http://opencv.org
+#RUN \
+## opencv
     DIR=$(mktemp -d) && cd ${DIR} && \
     curl -sLO https://github.com/opencv/opencv/archive/${OPENCV_VERSION}.tar.gz && \
     tar xzvf ${OPENCV_VERSION}.tar.gz && \
     cd opencv-${OPENCV_VERSION} && \
-    mkdir build && \
-    cd build && \
+    mkdir build && cd build && \
+    export MAKEFLAGS="-j$(($(grep -c ^processor /proc/cpuinfo) + 1))" && \
     cmake -D BUILD_opencv_python3=ON \
     -D CMAKE_BUILD_TYPE=RELEASE \
     -D INSTALL_C_EXAMPLES=OFF \
@@ -248,8 +253,10 @@ RUN apk update && apk upgrade && \
     cp ${DIR}/opencv-${OPENCV_VERSION}/build/lib/python3/cv2.cpython-36m-x86_64-linux-gnu.so /usr/local/lib/python3.6/cv2.so && \
     rm -rf ${DIR} && \
 
-# cleanup
+## CLEANUP
+
     cd && \
     apk del ${buildDeps} && \
+    apk del ${opencvDeps} && \
     rm -rf /var/cache/apk/* /usr/local/include && \
     ffmpeg -buildconf

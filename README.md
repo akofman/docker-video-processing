@@ -5,7 +5,7 @@
 [![ffmpeg](https://img.shields.io/badge/ffmpeg-v3.3.2-blue.svg)](https://ffmpeg.org)
 [![ffmpeg](https://img.shields.io/badge/opencv-v3.2.0-blue.svg)](http://opencv.org)
 
-Provides a small Docker image (~100MB) intended for video processing.
+Provides a Docker image intended for video processing.
 
 It includes:
 - [Python](https://www.python.org)
@@ -16,12 +16,12 @@ FFMPEG and OpenCV are compiled from sources.
 
 ## Installation
 ```
-$ docker pull akofman/video-processing:latest
+$ docker pull alexiskofman/video-processing:latest
 ```
 
 Then enjoy what's inside:
 ```
-$ docker run --rm -ti akofman/video-processing:latest ash
+$ docker run --rm -ti alexiskofman/video-processing:latest ash
 ```
 
 # License
