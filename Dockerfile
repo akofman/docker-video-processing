@@ -1,29 +1,37 @@
-FROM python:3.6.1-alpine
-MAINTAINER Alexis Kofman <alexis.kofman@gmail.com>
+FROM python:3.6.3-alpine3.6
+LABEL maintainer="Alexis Kofman <alexis.kofman@gmail.com>"
 
 ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig" \
     SRC="/usr/local" \
-    OPENCV_VERSION="3.2.0" \
-    FFMPEG_VERSION="3.3.2" \
+    OPENCV_VERSION="3.3.1" \
+    FFMPEG_VERSION="3.4" \
     FDKAAC_VERSION="0.1.5" \
     LAME_VERSION="3.99.5" \
-    OGG_VERSION="1.3.2" \
-    OPENCOREAMR_VERSION="0.1.4" \
-    OPUS_VERSION="1.2" \
+    OGG_VERSION="1.3.3" \
+    OPENCOREAMR_VERSION="0.1.5" \
+    OPUS_VERSION="1.2.1" \
     THEORA_VERSION="1.1.1" \
     VORBIS_VERSION="1.3.5" \
     VPX_VERSION="1.6.1" \
-    X264_VERSION="20170226-2245-stable" \
-    X265_VERSION="2.3" \
+    X264_VERSION="20171204-2245-stable" \
+    X265_VERSION="2.6" \
     XVID_VERSION="1.3.4" \
-    FREETYPE_VERSION="2.5.5" \
+    FREETYPE_VERSION="2.8.1" \
     LIBVIDSTAB_VERSION="1.1.0" \
-    OGG_SHA256SUM="e19ee34711d7af328cb26287f4137e70630e7261b17cbe3cd41011d73a654692  libogg-1.3.2.tar.gz" \
-    OPUS_SHA256SUM="77db45a87b51578fbc49555ef1b10926179861d854eb2613207dc79d9ec0a9a9  opus-1.2.tar.gz" \
-    VORBIS_SHA256SUM="6efbcecdd3e5dfbf090341b485da9d176eb250d893e3eb378c428a2db38301ce  libvorbis-1.3.5.tar.gz" \
+    OPENCV_SHA256SUM="5dca3bb0d661af311e25a72b04a7e4c22c47c1aa86eb73e70063cd378a2aa6ee  3.3.1.tar.gz" \
+    FFMPEG_SHA256SUM="6ed03b00404a3923e3c2f560248a9c9ad79fbaaee26d723f74aae6b31fe2bae6  ffmpeg-3.4.tar.gz" \
+    FDKAAC_SHA256SUM="ff53d1d01cacc29c071e23192dfefa93bdbeaf775fc5d296259b4859d0306b79  v0.1.5.tar.gz" \
+    LAME_SHA256SUM="24346b4158e4af3bd9f2e194bb23eb473c75fb7377011523353196b19b9a23ff  lame-3.99.5.tar.gz" \
+    OGG_SHA256SUM="c2e8a485110b97550f453226ec644ebac6cb29d1caef2902c007edab4308d985  libogg-1.3.3.tar.gz" \
+    OPENCOREAMR_SHA256SUM="2c006cb9d5f651bfb5e60156dbff6af3c9d35c7bbcc9015308c0aff1e14cd341  opencore-amr-0.1.5.tar.gz" \
+    OPUS_SHA256SUM="cfafd339ccd9c5ef8d6ab15d7e1a412c054bf4cb4ecbbbcc78c12ef2def70732  opus-1.2.1.tar.gz" \
     THEORA_SHA256SUM="40952956c47811928d1e7922cda3bc1f427eb75680c3c37249c91e949054916b  libtheora-1.1.1.tar.gz" \
+    VORBIS_SHA256SUM="6efbcecdd3e5dfbf090341b485da9d176eb250d893e3eb378c428a2db38301ce  libvorbis-1.3.5.tar.gz" \
+    VPX_SHA256SUM="cda8bb6f0e4848c018177d3a576fa83ed96d762554d7010fe4cfb9d70c22e588  v1.6.1" \
+    X264_SHA256SUM="73eeeed30b5c5dd2ac677383f123cf03ed05a38ef12cfcf78559fe468fdec46f  x264-snapshot-20171204-2245-stable.tar.bz2" \
+    X265_SHA256SUM="1bf0036415996af841884802161065b9e6be74f5f6808ac04831363e2549cdbf  x265_2.6.tar.gz" \
     XVID_SHA256SUM="4e9fd62728885855bc5007fe1be58df42e5e274497591fec37249e1052ae316f  xvidcore-1.3.4.tar.gz" \
-    FREETYPE_SHA256SUM="5d03dd76c2171a7601e9ce10551d52d4471cf92cd205948e60289251daddffa8  freetype-2.5.5.tar.gz" \
+    FREETYPE_SHA256SUM="876711d064a6a1bd74beb18dd37f219af26100f72daaebd2d86cb493d7cd7ec6  freetype-2.8.1.tar.gz" \
     LIBVIDSTAB_SHA256SUM="14d2a053e56edad4f397be0cb3ef8eb1ec3150404ce99a426c4eb641861dc0bb  v1.1.0.tar.gz"
 
 ## INSTALL FFMPEG https://ffmpeg.org
@@ -44,14 +52,16 @@ RUN apk update && apk upgrade && \
                openssl-dev \
                tar \
                yasm \
-               zlib-dev" && \
-    apk  add --update ${buildDeps} libgcc libstdc++ ca-certificates libgomp && \
+               zlib-dev \
+               expat-dev" && \
+    apk add --no-cache ${buildDeps} libgcc libstdc++ ca-certificates libcrypto1.0 libssl1.0 libgomp expat && \
     export MAKEFLAGS="-j$(($(grep -c ^processor /proc/cpuinfo) + 1))" && \
 #RUN  \
 ## opencore-amr https://sourceforge.net/projects/opencore-amr/
     DIR=$(mktemp -d) && cd ${DIR} && \
-    curl -sL https://downloads.sf.net/project/opencore-amr/opencore-amr/opencore-amr-${OPENCOREAMR_VERSION}.tar.gz | \
-    tar -zx --strip-components=1 && \
+    curl -sLO https://downloads.sf.net/project/opencore-amr/opencore-amr/opencore-amr-${OPENCOREAMR_VERSION}.tar.gz && \
+    echo ${OPENCOREAMR_SHA256SUM} | sha256sum --check && \
+    tar -zx --strip-components=1 -f opencore-amr-${OPENCOREAMR_VERSION}.tar.gz && \
     ./configure --prefix="${SRC}" --bindir="${SRC}/bin" --enable-shared --datadir=${DIR} && \
     make && \
     make install && \
@@ -59,8 +69,9 @@ RUN apk update && apk upgrade && \
 #RUN  \
 ## x264 http://www.videolan.org/developers/x264.html
     DIR=$(mktemp -d) && cd ${DIR} && \
-    curl -sL https://ftp.videolan.org/pub/videolan/x264/snapshots/x264-snapshot-${X264_VERSION}.tar.bz2 | \
-    tar -jx --strip-components=1 && \
+    curl -sLO ftp://ftp.videolan.org/pub/videolan/x264/snapshots/x264-snapshot-${X264_VERSION}.tar.bz2 && \
+    echo ${X264_SHA256SUM} | sha256sum --check && \
+    tar -jx --strip-components=1 -f x264-snapshot-${X264_VERSION}.tar.bz2 && \
     ./configure --prefix="${SRC}" --bindir="${SRC}/bin" --enable-pic --enable-shared --disable-cli && \
     make && \
     make install && \
@@ -68,9 +79,10 @@ RUN apk update && apk upgrade && \
 #RUN  \
 ## x265 http://x265.org/
     DIR=$(mktemp -d) && cd ${DIR} && \
-    curl -sL https://download.videolan.org/pub/videolan/x265/x265_${X265_VERSION}.tar.gz  | \
-    tar -zx && \
-    cd x265_${X265_VERSION}/build/linux && \
+    curl -sLO https://download.videolan.org/pub/videolan/x265/x265_${X265_VERSION}.tar.gz  && \
+    echo ${X265_SHA256SUM} | sha256sum --check && \
+    tar -zx -f x265_${X265_VERSION}.tar.gz && \
+    cd x265_v${X265_VERSION}/build/linux && \
     ./multilib.sh && \
     make -C 8bit install && \
     rm -rf ${DIR} && \
@@ -120,8 +132,9 @@ RUN apk update && apk upgrade && \
 #RUN  \
 ## libvpx https://www.webmproject.org/code/
     DIR=$(mktemp -d) && cd ${DIR} && \
-    curl -sL https://codeload.github.com/webmproject/libvpx/tar.gz/v${VPX_VERSION} | \
-    tar -zx --strip-components=1 && \
+    curl -sLO https://codeload.github.com/webmproject/libvpx/tar.gz/v${VPX_VERSION} && \
+    echo ${VPX_SHA256SUM} | sha256sum --check && \
+    tar -zx --strip-components=1 -f v${VPX_VERSION} && \
     ./configure --prefix="${SRC}" --enable-vp8 --enable-vp9 --enable-pic --disable-debug --disable-examples --disable-docs --disable-install-bins --enable-shared && \
     make && \
     make install && \
@@ -129,8 +142,9 @@ RUN apk update && apk upgrade && \
 #RUN  \
 ## libmp3lame http://lame.sourceforge.net/
     DIR=$(mktemp -d) && cd ${DIR} && \
-    curl -sL https://downloads.sf.net/project/lame/lame/${LAME_VERSION%.*}/lame-${LAME_VERSION}.tar.gz | \
-    tar -zx --strip-components=1 && \
+    curl -sLO https://downloads.sf.net/project/lame/lame/${LAME_VERSION%.*}/lame-${LAME_VERSION}.tar.gz && \
+    echo ${LAME_SHA256SUM} | sha256sum --check && \
+    tar -zx --strip-components=1 -f lame-${LAME_VERSION}.tar.gz && \
     ./configure --prefix="${SRC}" --bindir="${SRC}/bin" --disable-static --enable-nasm --datarootdir="${DIR}" && \
     make && \
     make install && \
@@ -149,8 +163,9 @@ RUN apk update && apk upgrade && \
 #RUN  \
 ## fdk-aac https://github.com/mstorsjo/fdk-aac
     DIR=$(mktemp -d) && cd ${DIR} && \
-    curl -sL https://github.com/mstorsjo/fdk-aac/archive/v${FDKAAC_VERSION}.tar.gz | \
-    tar -zx --strip-components=1 && \
+    curl -sLO https://github.com/mstorsjo/fdk-aac/archive/v${FDKAAC_VERSION}.tar.gz && \
+    echo ${FDKAAC_SHA256SUM} | sha256sum --check && \
+    tar -zx --strip-components=1 -f v${FDKAAC_VERSION}.tar.gz && \
     autoreconf -fiv && \
     ./configure --prefix="${SRC}" --disable-static --datadir="${DIR}" && \
     make && \
@@ -182,6 +197,7 @@ RUN apk update && apk upgrade && \
 ## ffmpeg
     DIR=$(mktemp -d) && cd ${DIR} && \
     curl -sLO https://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.gz && \
+    echo ${FFMPEG_SHA256SUM} | sha256sum --check && \
     tar -zx --strip-components=1 -f ffmpeg-${FFMPEG_VERSION}.tar.gz && \
     ./configure \
     --bindir="${SRC}/bin" \
@@ -222,22 +238,21 @@ RUN apk update && apk upgrade && \
     make qt-faststart && \
     cp qt-faststart ${SRC}/bin && \
     rm -rf ${DIR} && \
-
 ## INSTALL OPENCV http://opencv.org
-
 #RUN \
     opencvDeps="clang \
                 clang-dev \
                 linux-headers" && \
-    apk  add --update ${opencvDeps} && \
+    apk add --no-cache ${opencvDeps} && \
     export CC="/usr/bin/clang" && \
     export CXX="/usr/bin/clang++" && \
-    # OpenCV depends on NumPy. It represents images as NumPy arrays, so we need to install NumPy
-    pip3 install numpy && \
 #RUN \
 ## opencv
     DIR=$(mktemp -d) && cd ${DIR} && \
+    # OpenCV depends on NumPy. It represents images as NumPy arrays, so we need to install NumPy
+    pip3 install numpy && \
     curl -sLO https://github.com/opencv/opencv/archive/${OPENCV_VERSION}.tar.gz && \
+    echo ${OPENCV_SHA256SUM} | sha256sum --check && \    
     tar xzvf ${OPENCV_VERSION}.tar.gz && \
     cd opencv-${OPENCV_VERSION} && \
     mkdir build && cd build && \
@@ -252,9 +267,7 @@ RUN apk update && apk upgrade && \
     make install && \
     cp ${DIR}/opencv-${OPENCV_VERSION}/build/lib/python3/cv2.cpython-36m-x86_64-linux-gnu.so /usr/local/lib/python3.6/cv2.so && \
     rm -rf ${DIR} && \
-
 ## CLEANUP
-
     cd && \
     apk del ${buildDeps} && \
     apk del ${opencvDeps} && \
