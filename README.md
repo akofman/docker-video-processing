@@ -1,9 +1,9 @@
 # Docker Video Processing
 
-[![ffmpeg](https://img.shields.io/badge/alpine-v3.4.6-blue.svg)](https://alpinelinux.org)
-[![ffmpeg](https://img.shields.io/badge/python-v3.6.1-blue.svg)](https://www.python.org)
-[![ffmpeg](https://img.shields.io/badge/ffmpeg-v3.3.2-blue.svg)](https://ffmpeg.org)
-[![ffmpeg](https://img.shields.io/badge/opencv-v3.2.0-blue.svg)](http://opencv.org)
+[![ffmpeg](https://img.shields.io/badge/alpine-v3.6-blue.svg)](https://alpinelinux.org)
+[![ffmpeg](https://img.shields.io/badge/python-v3.6.3-blue.svg)](https://www.python.org)
+[![ffmpeg](https://img.shields.io/badge/ffmpeg-v3.4-blue.svg)](https://ffmpeg.org)
+[![ffmpeg](https://img.shields.io/badge/opencv-v3.3.1-blue.svg)](http://opencv.org)
 
 Provides a Docker image intended for video processing.
 
