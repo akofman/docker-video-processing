@@ -1,7 +1,8 @@
-FROM python:3.6.3-alpine3.6
+FROM  tensorflow/tensorflow:1.4.1-gpu-py3
 LABEL maintainer="Alexis Kofman <alexis.kofman@gmail.com>"
 
 ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig" \
+    LD_LIBRARY_PATH="/usr/local/lib" \
     SRC="/usr/local" \
     OPENCV_VERSION="3.3.1" \
     FFMPEG_VERSION="3.4" \
@@ -35,25 +36,28 @@ ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig" \
     LIBVIDSTAB_SHA256SUM="14d2a053e56edad4f397be0cb3ef8eb1ec3150404ce99a426c4eb641861dc0bb  v1.1.0.tar.gz"
 
 ## INSTALL FFMPEG https://ffmpeg.org
-RUN apk update && apk upgrade && \
+RUN apt-get -yqq update && \
+    apt-get install -yq --no-install-recommends ca-certificates expat libgomp1 && \
     buildDeps="autoconf \
-               automake \
-               bash \
-               binutils \
-               bzip2 \
-               cmake \
-               curl \
-               coreutils \
-               g++ \
-               gcc \
-               libtool \
-               make \
-               openssl-dev \
-               tar \
-               yasm \
-               zlib-dev \
-               expat-dev" && \
-    apk add --no-cache ${buildDeps} libgcc libstdc++ ca-certificates libcrypto1.0 libssl1.0 libgomp expat && \
+                automake \
+                cmake \
+                curl \
+                bzip2 \
+                libexpat1-dev \
+                g++ \
+                gcc \
+                git \
+                gperf \
+                libtool \
+                make \
+                nasm \
+                perl \
+                pkg-config \
+                python \
+                libssl-dev \
+                yasm \
+                zlib1g-dev" && \
+    apt-get install -yq --no-install-recommends ${buildDeps} && \
     export MAKEFLAGS="-j$(($(grep -c ^processor /proc/cpuinfo) + 1))" && \
 #RUN  \
 ## opencore-amr https://sourceforge.net/projects/opencore-amr/
@@ -192,7 +196,7 @@ RUN apk update && apk upgrade && \
     make && \
     make install && \
     rm -rf ${DIR} && \
-#RUN  \
+# RUN  \
 ## ffmpeg
     DIR=$(mktemp -d) && cd ${DIR} && \
     curl -sLO https://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.gz && \
@@ -237,38 +241,39 @@ RUN apk update && apk upgrade && \
     make qt-faststart && \
     cp qt-faststart ${SRC}/bin && \
     rm -rf ${DIR} && \
-## INSTALL OPENCV http://opencv.org
+# ## INSTALL OPENCV http://opencv.org
 #RUN \
-    opencvDeps="clang \
-                clang-dev \
-                linux-headers" && \
-    apk add --no-cache ${opencvDeps} && \
-    export CC="/usr/bin/clang" && \
-    export CXX="/usr/bin/clang++" && \
+    opencvDeps="libopencv-dev qtbase5-dev" && \
+    apt-get -yqq install ${opencvDeps} && \
 #RUN \
 ## opencv
     DIR=$(mktemp -d) && cd ${DIR} && \
     # OpenCV depends on NumPy. It represents images as NumPy arrays, so we need to install NumPy
-    pip3 install numpy && \
     curl -sLO https://github.com/opencv/opencv/archive/${OPENCV_VERSION}.tar.gz && \
     echo ${OPENCV_SHA256SUM} | sha256sum --check && \    
     tar xzvf ${OPENCV_VERSION}.tar.gz && \
     cd opencv-${OPENCV_VERSION} && \
     mkdir build && cd build && \
-    export MAKEFLAGS="-j$(($(grep -c ^processor /proc/cpuinfo) + 1))" && \
-    cmake -D BUILD_opencv_python3=ON \
+    cmake -D CMAKE_INSTALL_PREFIX=/usr/local \
     -D CMAKE_BUILD_TYPE=RELEASE \
+    -D FORCE_VTK=ON \
+    -D WITH_TBB=ON \
+    -D WITH_V4L=ON \
+    -D WITH_QT=ON \
+    -D WITH_OPENGL=ON \
+    -D WITH_CUBLAS=ON \
+    -D CUDA_NVCC_FLAGS="-D_FORCE_INLINES --expt-relaxed-constexpr" \
+    -D WITH_GDAL=ON \
+    -D WITH_XINE=ON \
     -D INSTALL_C_EXAMPLES=OFF \
     -D INSTALL_PYTHON_EXAMPLES=OFF \
-    -D CMAKE_INSTALL_PREFIX=/usr/local \
     -D BUILD_EXAMPLES=OFF .. && \
-    make && \
+    make -j $(($(nproc) + 1)) && \
     make install && \
-    cp ${DIR}/opencv-${OPENCV_VERSION}/build/lib/python3/cv2.cpython-36m-x86_64-linux-gnu.so /usr/local/lib/python3.6/cv2.so && \
+    /bin/bash -c 'echo "/usr/local/lib" > /etc/ld.so.conf.d/opencv.conf' && \
+    ldconfig && \
     rm -rf ${DIR} && \
-## CLEANUP
+# ## CLEANUP
     cd && \
-    apk del ${buildDeps} && \
-    apk del ${opencvDeps} && \
-    rm -rf /var/cache/apk/* /usr/local/include && \
-    ffmpeg -buildconf
+    apt-get autoremove -y && \
+    apt-get clean -y
