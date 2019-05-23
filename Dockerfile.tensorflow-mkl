@@ -1,4 +1,4 @@
-FROM  intelaipg/intel-optimized-tensorflow:1.11.0-mkl-py3
+FROM  intelaipg/intel-optimized-tensorflow:1.13.1-mkl-py3
 LABEL maintainer="Alexis Kofman <alexis.kofman@gmail.com>"
 
 ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig" \
